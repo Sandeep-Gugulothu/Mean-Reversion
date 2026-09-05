@@ -47,9 +47,9 @@ def download_universe_ohlcv(
 ) -> dict[str, pd.DataFrame]:
     """
     Download complete OHLCV data for all tickers:
+    - Stores both raw 'Close' and split/dividend-adjusted 'Adj Close'.
     - Vectorized extraction from yfinance batch download.
     - Memory-efficient float32 / int64 typing.
-    - Automatically adjusts prices for splits & dividends.
     - Saves individual {SYMBOL}.parquet files to data/ohlcv/.
     - Combines all valid stocks into data/nifty50_bulk_ohlcv.parquet.
     - Returns a dict {symbol: ohlcv_df}.
@@ -62,7 +62,7 @@ def download_universe_ohlcv(
         tickers=yf_tickers,
         start=start,
         end=end,
-        auto_adjust=True,
+        auto_adjust=False,
         progress=True,
         group_by="ticker",
     )
@@ -85,8 +85,8 @@ def download_universe_ohlcv(
                 else:
                     continue
 
-            # Check if required columns exist
-            cols = [c for c in ["Open", "High", "Low", "Close", "Volume"] if c in df_stock.columns]
+            # Check if required columns exist (both Close and Adj Close)
+            cols = [c for c in ["Open", "High", "Low", "Close", "Adj Close", "Volume"] if c in df_stock.columns]
             df_stock = df_stock[cols].dropna(subset=["Close"]).copy()
 
             # Quality check: reject if >20% missing or empty
@@ -98,7 +98,7 @@ def download_universe_ohlcv(
             df_stock.index = pd.to_datetime(df_stock.index)
             df_stock.index.name = "Date"
 
-            for p_col in ["Open", "High", "Low", "Close"]:
+            for p_col in ["Open", "High", "Low", "Close", "Adj Close"]:
                 if p_col in df_stock.columns:
                     df_stock[p_col] = df_stock[p_col].astype("float32")
             if "Volume" in df_stock.columns:
@@ -134,7 +134,7 @@ def download_index_ohlcv(
 ) -> pd.DataFrame:
     """Download and cache complete OHLCV for benchmark index."""
     print(f"Downloading index OHLCV {ticker} ...")
-    raw = yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)
+    raw = yf.download(ticker, start=start, end=end, auto_adjust=False, progress=False)
     if raw.empty:
         raise ValueError(f"No data for index {ticker}")
 
@@ -147,12 +147,12 @@ def download_index_ohlcv(
         else:
             raw.columns = [c[0] for c in raw.columns]
 
-    cols = [c for c in ["Open", "High", "Low", "Close", "Volume"] if c in raw.columns]
+    cols = [c for c in ["Open", "High", "Low", "Close", "Adj Close", "Volume"] if c in raw.columns]
     idx_df = raw[cols].copy()
     idx_df.index = pd.to_datetime(idx_df.index)
     idx_df.index.name = "Date"
 
-    for p_col in ["Open", "High", "Low", "Close"]:
+    for p_col in ["Open", "High", "Low", "Close", "Adj Close"]:
         if p_col in idx_df.columns:
             idx_df[p_col] = idx_df[p_col].astype("float32")
     if "Volume" in idx_df.columns:
@@ -193,15 +193,16 @@ def load_universe_ohlcv() -> tuple[dict[str, pd.DataFrame], pd.DataFrame]:
 def load_or_download() -> tuple[pd.DataFrame, pd.Series]:
     """
     High-level backward-compatible loader for the strategy pipeline.
-    Extracts aligned Close prices across universe and index.
+    Extracts aligned adjusted prices across universe and index for return calculations.
     Returns (close_df, index_close_series).
     """
     stocks_dict, idx_df = load_universe_ohlcv()
 
-    # Build aligned close price matrix
+    # Build aligned price matrix using Adj Close (or fallback to Close)
     close_series_list = []
     for sym, df in stocks_dict.items():
-        s = df["Close"].rename(sym)
+        price_col = "Adj Close" if "Adj Close" in df.columns else "Close"
+        s = df[price_col].rename(sym)
         close_series_list.append(s)
 
     close_df = pd.concat(close_series_list, axis=1)
@@ -215,7 +216,8 @@ def load_or_download() -> tuple[pd.DataFrame, pd.Series]:
 
     close_df = close_df.ffill().dropna()
 
-    idx_close = idx_df["Close"].squeeze()
+    idx_price_col = "Adj Close" if "Adj Close" in idx_df.columns else "Close"
+    idx_close = idx_df[idx_price_col].squeeze()
     idx_close.name = "NIFTY50"
 
     # Align dates

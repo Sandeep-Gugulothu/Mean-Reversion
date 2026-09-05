@@ -96,7 +96,7 @@ class TestParquetDataIntegrity:
         assert len(parquet_files) == 50, f"Expected 50 parquet files in {OHLCV_DIR}, found {len(parquet_files)}"
 
     def test_per_stock_parquet_schema_and_sanity(self):
-        required_cols = {"Open", "High", "Low", "Close", "Volume"}
+        required_cols = {"Open", "High", "Low", "Close", "Adj Close", "Volume"}
         print(f"\n   Checking schema & sanity across all 50 parquet files...", flush=True)
 
         for i, sym in enumerate(NIFTY50_TICKERS, 1):

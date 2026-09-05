@@ -6,6 +6,7 @@
 - Storing in csv is not a good idea
 
 - Collecting OHLCV for each stock
+- Stored both raw 'Close' and split/dividend-adjusted 'Adj Close' side-by-side in all Parquet files to maintain unadjusted price history while ensuring dividend/split-safe return calculations.
 - Storing the data in parquet this is columnar format so less load to RAM and reduced I/O bottleneck.
 
 ### Limitation
