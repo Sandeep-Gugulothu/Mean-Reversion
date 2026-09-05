@@ -37,15 +37,19 @@ NIFTY50_INDEX: str = "^NSEI"
 END_DATE:   str = datetime.today().strftime("%Y-%m-%d")
 START_DATE: str = (datetime.today() - timedelta(days=5 * 365 + 2)).strftime("%Y-%m-%d")
 
-# Strategy parameters (per-stock)
+# Strategy parameters
 ZSCORE_WINDOW:  int   = 20      # rolling window for z-score
 BUY_THRESHOLD:  float = -2.0    # buy when z-score < this  (oversold)
 SELL_THRESHOLD: float =  2.0    # short when z-score > this (overbought)
-HOLDING_PERIOD: int   =  5      # hold each position for N trading days
+HOLDING_PERIOD: int   =  5      # fixed hold period in trading days
+EXIT_Z_THRESHOLD: float = 0.5   # dynamic exit when |z| < this (mean reverted)
 
-# Transaction costs
-COST_PER_LEG: float = 0.000
+# Transaction costs (0.10% per leg = 10 bps, 20 bps round-trip)
+COST_PER_LEG: float = 0.0010
 
-# Sharpe / CAGR
+# Portfolio risk parameters
+MAX_ACTIVE_POSITIONS: int = 10   # maximum simultaneous active positions cap
+
+# Benchmark & Evaluation
 SHARPE_GOOD_THRESHOLD: float = 0.5
 CAGR_GOOD_THRESHOLD:   float = 0.0   # CAGR > 0 %
