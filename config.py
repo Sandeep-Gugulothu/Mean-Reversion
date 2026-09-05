@@ -2,21 +2,30 @@
 config.py — all strategy parameters in one place.
 """
 
+import os
+import json
 from datetime import datetime, timedelta
 
-# Universe 
-NIFTY50_TICKERS: list[str] = [
-    "RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK",
-    "HINDUNILVR", "ITC", "SBIN", "BHARTIARTL", "KOTAKBANK",
-    "LT", "AXISBANK", "ASIANPAINT", "MARUTI", "TITAN",
-    "SUNPHARMA", "ULTRACEMCO", "BAJFINANCE", "WIPRO", "NESTLEIND",
-    "POWERGRID", "NTPC", "TECHM", "HCLTECH", "ONGC",
-    "TATAMOTORS", "TATASTEEL", "JSWSTEEL", "ADANIENT", "ADANIPORTS",
-    "COALINDIA", "DIVISLAB", "DRREDDY", "CIPLA", "EICHERMOT",
-    "BAJAJFINSV", "BAJAJ-AUTO", "HEROMOTOCO", "BRITANNIA", "GRASIM",
-    "INDUSINDBK", "M&M", "HINDALCO", "VEDL", "BPCL",
-    "IOC", "SHREECEM", "APOLLOHOSP", "TATACONSUM", "UPL",
-]
+# Output folders
+DATA_DIR:    str = "data"
+PLOTS_DIR:   str = "plots"
+RESULTS_DIR: str = "results"
+OHLCV_DIR:   str = os.path.join(DATA_DIR, "ohlcv")
+
+# Data files
+CONSTITUENTS_JSON: str = os.path.join(DATA_DIR, "nifty50_constituents.json")
+BULK_OHLCV_PARQUET: str = os.path.join(DATA_DIR, "nifty50_bulk_ohlcv.parquet")
+INDEX_PARQUET:      str = os.path.join(DATA_DIR, "nifty50_index.parquet")
+
+# Universe (loaded from JSON)
+def _load_tickers() -> list[str]:
+    if not os.path.exists(CONSTITUENTS_JSON):
+        raise FileNotFoundError(f"Missing constituents file: {CONSTITUENTS_JSON}. Please provide the JSON file.")
+    with open(CONSTITUENTS_JSON, "r") as f:
+        data = json.load(f)
+    return data.get("tickers", [])
+
+NIFTY50_TICKERS: list[str] = _load_tickers()
 
 # yfinance ticker for NIFTY 50 index
 NIFTY50_INDEX: str = "^NSEI"
@@ -32,14 +41,8 @@ SELL_THRESHOLD: float =  2.0    # short when z-score > this (overbought)
 HOLDING_PERIOD: int   =  5      # hold each position for N trading days
 
 # Transaction costs
-# 0.00 % per leg applied on position *changes* (entry + exit) for testing deployment costs are more.
 COST_PER_LEG: float = 0.000
 
 # Sharpe / CAGR
 SHARPE_GOOD_THRESHOLD: float = 0.5
 CAGR_GOOD_THRESHOLD:   float = 0.0   # CAGR > 0 %
-
-# Output folders
-DATA_DIR:    str = "data"
-PLOTS_DIR:   str = "plots"
-RESULTS_DIR: str = "results"
