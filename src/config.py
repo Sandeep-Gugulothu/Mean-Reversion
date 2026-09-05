@@ -6,14 +6,17 @@ import os
 import json
 from datetime import datetime, timedelta
 
+# Project root directory (one level up from src/)
+PROJECT_ROOT: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # Output folders
-DATA_DIR:    str = "data"
-PLOTS_DIR:   str = "plots"
-RESULTS_DIR: str = "results"
+DATA_DIR:    str = os.path.join(PROJECT_ROOT, "data")
+PLOTS_DIR:   str = os.path.join(PROJECT_ROOT, "plots")
+RESULTS_DIR: str = os.path.join(PROJECT_ROOT, "results")
 OHLCV_DIR:   str = os.path.join(DATA_DIR, "ohlcv")
 
 # Data files
-CONSTITUENTS_JSON: str = os.path.join(DATA_DIR, "nifty50_constituents.json")
+CONSTITUENTS_JSON:  str = os.path.join(DATA_DIR, "nifty50_constituents.json")
 BULK_OHLCV_PARQUET: str = os.path.join(DATA_DIR, "nifty50_bulk_ohlcv.parquet")
 INDEX_PARQUET:      str = os.path.join(DATA_DIR, "nifty50_index.parquet")
 

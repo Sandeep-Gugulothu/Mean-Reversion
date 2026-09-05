@@ -5,11 +5,18 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime
 
-from config import (
-    NIFTY50_TICKERS, NIFTY50_INDEX,
-    START_DATE, END_DATE, DATA_DIR, OHLCV_DIR,
-    BULK_OHLCV_PARQUET, INDEX_PARQUET, CONSTITUENTS_JSON,
-)
+try:
+    from .config import (
+        NIFTY50_TICKERS, NIFTY50_INDEX,
+        START_DATE, END_DATE, DATA_DIR, OHLCV_DIR,
+        BULK_OHLCV_PARQUET, INDEX_PARQUET, CONSTITUENTS_JSON,
+    )
+except ImportError:
+    from config import (
+        NIFTY50_TICKERS, NIFTY50_INDEX,
+        START_DATE, END_DATE, DATA_DIR, OHLCV_DIR,
+        BULK_OHLCV_PARQUET, INDEX_PARQUET, CONSTITUENTS_JSON,
+    )
 
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(OHLCV_DIR, exist_ok=True)

@@ -12,13 +12,19 @@ Steps
 """
 
 import os
+import sys
 import pandas as pd
 
-from config   import RESULTS_DIR, PLOTS_DIR, DATA_DIR
-from data     import load_or_download
-from backtest import run_backtest, benchmark_metrics
-from plots    import generate_all_plots
-from report   import print_conclusion
+# Add src to sys.path so modules inside src can import each other seamlessly
+SRC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
+
+from src.config   import RESULTS_DIR, PLOTS_DIR, DATA_DIR
+from src.data     import load_or_download
+from src.backtest import run_backtest, benchmark_metrics
+from src.plots    import generate_all_plots
+from src.report   import print_conclusion
 
 os.makedirs(DATA_DIR,    exist_ok=True)
 os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -49,54 +55,54 @@ def build_summary(results: dict) -> pd.DataFrame:
 
 def main() -> None:
 
-    # ── 1. Data ───────────────────────────────────────────────────────────────
+    # -- 1. Data ---------------------------------------------------------------
     print("\n" + "=" * 55)
-    print("  STEP 1 — Data")
+    print("  STEP 1 - Data")
     print("=" * 55)
     close, index_close = load_or_download()
     stocks = close.columns.tolist()
     print(f"  Stocks : {len(stocks)}  |  Days : {len(close)}")
-    print(f"  Range  : {close.index[0].date()} → {close.index[-1].date()}")
+    print(f"  Range  : {close.index[0].date()} -> {close.index[-1].date()}")
 
-    # ── 2. Per-stock backtest ─────────────────────────────────────────────────
+    # -- 2. Per-stock backtest -------------------------------------------------
     print("\n" + "=" * 55)
-    print("  STEP 2 — Per-Stock Backtest")
+    print("  STEP 2 - Per-Stock Backtest")
     print("=" * 55)
     results = run_backtest(close)
 
-    # ── 3. Summary table ──────────────────────────────────────────────────────
+    # -- 3. Summary table ------------------------------------------------------
     print("\n" + "=" * 55)
-    print("  STEP 3 — Summary Table")
+    print("  STEP 3 - Summary Table")
     print("=" * 55)
     summary = build_summary(results)
     print(summary.to_string())
 
-    # ── 4. Benchmark metrics ──────────────────────────────────────────────────
+    # -- 4. Benchmark metrics --------------------------------------------------
     print("\n" + "=" * 55)
-    print("  STEP 4 — Benchmark (NIFTY 50 Buy & Hold)")
+    print("  STEP 4 - Benchmark (NIFTY 50 Buy & Hold)")
     print("=" * 55)
     bm = benchmark_metrics(index_close)
     print(f"  CAGR   : {bm['cagr']*100:.2f}%")
     print(f"  Sharpe : {bm['sharpe']:.3f}")
 
-    # ── 5. Charts ─────────────────────────────────────────────────────────────
+    # -- 5. Charts -------------------------------------------------------------
     print("\n" + "=" * 55)
-    print("  STEP 5 — Generating Charts")
+    print("  STEP 5 - Generating Charts")
     print("=" * 55)
     generate_all_plots(results, summary, bm["cagr"], bm["sharpe"])
 
-    # ── 6. Conclusion & CSV ───────────────────────────────────────────────────
+    # -- 6. Conclusion & CSV ---------------------------------------------------
     print("\n" + "=" * 55)
-    print("  STEP 6 — Conclusion")
+    print("  STEP 6 - Conclusion")
     print("=" * 55)
     print_conclusion(summary, bm["cagr"], bm["sharpe"], stocks)
 
-    # ── Done ──────────────────────────────────────────────────────────────────
+    # -- Done ------------------------------------------------------------------
     print("\n" + "=" * 55)
     print("  DONE")
     print("=" * 55)
-    print(f"  Charts  →  {PLOTS_DIR}/")
-    print(f"  Metrics →  {RESULTS_DIR}/per_stock_metrics.csv")
+    print(f"  Charts  ->  {PLOTS_DIR}/")
+    print(f"  Metrics ->  {RESULTS_DIR}/per_stock_metrics.csv")
     print("=" * 55 + "\n")
 
 

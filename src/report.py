@@ -68,4 +68,4 @@ def print_conclusion(
         errors="ignore",
     )
     save_df.to_csv(csv_path)
-    print(f"\n  Metrics saved → {csv_path}")
+    print(f"\n  Metrics saved -> {csv_path}")
